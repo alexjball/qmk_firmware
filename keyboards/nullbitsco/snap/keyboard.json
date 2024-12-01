@@ -1,5 +1,6 @@
 {
-    "keyboard_name": "SNAP",
+    "$schema": "https://raw.githubusercontent.com/qmk/qmk_firmware/refs/heads/master/data/schemas/keyboard.jsonschema",
+    "keyboard_name": "aball",
     "manufacturer": "nullbits",
     "url": "https://nullbits.co/snap/",
     "usb": {
@@ -33,29 +34,17 @@
             "breathing": true,
             "rainbow_mood": true,
             "rainbow_swirl": true,
-            "snake": true,
-            "knight": true,
-            "christmas": true,
-            "static_gradient": true,
-            "rgb_test": true,
-            "alternating": true,
+            "snake": false,
+            "knight": false,
+            "christmas": false,
+            "static_gradient": false,
+            "rgb_test": false,
+            "alternating": false,
             "twinkle": true
         }
     },
     "split": {
-        "enabled": true,
-        "encoder": {
-            "right": {
-                "rotary": [
-                    {"pin_a": "B4", "pin_b": "B5"}
-                ]
-            }
-        },
-        "transport": {
-            "sync": {
-                "oled": true
-            }
-        }
+        "enabled": true
     },
     "ws2812": {
         "pin": "B2"
