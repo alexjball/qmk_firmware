@@ -44,13 +44,6 @@
     },
     "split": {
         "enabled": true,
-        "encoder": {
-            "right": {
-                "rotary": [
-                    {"pin_a": "B4", "pin_b": "B5"}
-                ]
-            }
-        },
         "transport": {
             "sync": {
                 "oled": true
