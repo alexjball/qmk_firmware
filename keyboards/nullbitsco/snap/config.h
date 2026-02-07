@@ -23,12 +23,11 @@
 // Workarounds for sleep/wake issues
 #define USB_SUSPEND_WAKEUP_DELAY 250
 
-// NOTE: There is a bug in AVR deep sleep, which
-// causes the MCU to stop responding in some cases.
-// Disabling the watchdog prevents the MCU from entering 
-// power down, while still turning off LEDs, audio, etc.
-// See qmk_firmware/issues/20087 for background
-#undef WDT_vect
+// NOTE: There was a bug in AVR deep sleep (qmk_firmware#20087)
+// which caused the MCU to stop responding. The original workaround
+// was #undef WDT_vect, but NO_SUSPEND_POWER_DOWN (set in keymap
+// config) is a cleaner fix that also allows SPLIT_WATCHDOG_ENABLE
+// to function with full watchdog support.
 
 /* split config */
 // #define SPLIT_USB_DETECT // Enable if you have issues with USB
