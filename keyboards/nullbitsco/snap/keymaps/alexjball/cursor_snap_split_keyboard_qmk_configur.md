@@ -1,13 +1,14 @@
 # Snap split keyboard QMK configuration
+
 _Exported on 2/7/2026 at 14:08:58 EST from Cursor (2.4.27)_
 
 ---
 
 **User**
 
-Explain how the snap split keyboard is configured, putting it in the context of the qmk documentation on split keyboards: https://docs.qmk.fm/features/split_keyboard 
+Explain how the snap split keyboard is configured, putting it in the context of the qmk documentation on split keyboards: https://docs.qmk.fm/features/split_keyboard
 
-@keyboards/nullbitsco/ 
+@keyboards/nullbitsco/
 
 ---
 
@@ -181,8 +182,8 @@ static void read_ext_pin(matrix_row_t current_matrix[]) {
 
 The docs explain that in a split keyboard, QMK doubles the rows: left half gets rows 0-5, right half gets rows 6-11. You can see this clearly in the layout definitions in `keyboard.json`. For example, the top function row:
 
-- **Left keys** use matrix rows `0-5` (e.g., `[0,1]`, `[0,2]`, ..., `[0,7]`)
-- **Right keys** use matrix rows `6-11` (e.g., `[6,0]`, `[6,1]`, ..., `[6,7]`)
+-   **Left keys** use matrix rows `0-5` (e.g., `[0,1]`, `[0,2]`, ..., `[0,7]`)
+-   **Right keys** use matrix rows `6-11` (e.g., `[6,0]`, `[6,1]`, ..., `[6,7]`)
 
 The extended pin on the right side shows up as `[8, 8]` -- row 8 (= right half row 2), column 8 (the virtual 9th column). In the ANSI layout, this is the key at position `(16, 1)` -- the Delete/Insert key to the right of Backspace.
 
@@ -221,7 +222,7 @@ The Bit-C LED on pin `F0` shows Caps Lock status (dim when active, off otherwise
 ```26:31:keyboards/nullbitsco/snap/config.h
 // NOTE: There is a bug in AVR deep sleep, which
 // causes the MCU to stop responding in some cases.
-// Disabling the watchdog prevents the MCU from entering 
+// Disabling the watchdog prevents the MCU from entering
 // power down, while still turning off LEDs, audio, etc.
 // See qmk_firmware/issues/20087 for background
 #undef WDT_vect
@@ -231,17 +232,17 @@ The Bit-C LED on pin `F0` shows Caps Lock status (dim when active, off otherwise
 
 ## Summary: How the SNAP Maps to the QMK Split Docs
 
-| QMK Split Feature | SNAP Implementation |
-|---|---|
-| Enable split | `"split": { "enabled": true }` in `keyboard.json` |
-| Transport | Soft serial on pin `E6` (TRRS cable) |
-| Handedness | Pin-based: `B6` low = left, high = right |
-| Master detection | VBUS voltage detection (native ATmega32u4) |
-| Matrix | Custom lite: demuxed 3-pin columns (8 cols) + 1 extended pin = 9 cols, 6 rows/hand |
-| Pin asymmetry | `MATRIX_ROW_PINS_RIGHT`, `MATRIX_COL_MUX_PINS_RIGHT` |
-| RGB split | 5+5 WS2812 LEDs on pin `B2` |
-| Data sync | OLED sync enabled |
-| MCU | ATmega32u4 (Pro Micro compatible) |
+| QMK Split Feature | SNAP Implementation                                                                |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| Enable split      | `"split": { "enabled": true }` in `keyboard.json`                                  |
+| Transport         | Soft serial on pin `E6` (TRRS cable)                                               |
+| Handedness        | Pin-based: `B6` low = left, high = right                                           |
+| Master detection  | VBUS voltage detection (native ATmega32u4)                                         |
+| Matrix            | Custom lite: demuxed 3-pin columns (8 cols) + 1 extended pin = 9 cols, 6 rows/hand |
+| Pin asymmetry     | `MATRIX_ROW_PINS_RIGHT`, `MATRIX_COL_MUX_PINS_RIGHT`                               |
+| RGB split         | 5+5 WS2812 LEDs on pin `B2`                                                        |
+| Data sync         | OLED sync enabled                                                                  |
+| MCU               | ATmega32u4 (Pro Micro compatible)                                                  |
 
 The SNAP is a more complex split keyboard than the "standard" Let's Split model the docs use as a reference. Its key distinguishing features are the **demultiplexed column scanning** (saving GPIOs at the cost of custom matrix code), the **asymmetric right-side extended pin**, and the **remote keyboard UART forwarding**.
 
@@ -249,7 +250,7 @@ The SNAP is a more complex split keyboard than the "standard" Let's Split model 
 
 **User**
 
-i have been having issues with the right half stopping responding seemingly at random. The usb is connected to the left. disconnecting adn reconnecting usb normally fixes it. Could any of this configuration lead to that behavior? 
+i have been having issues with the right half stopping responding seemingly at random. The usb is connected to the left. disconnecting adn reconnecting usb normally fixes it. Could any of this configuration lead to that behavior?
 
 ---
 
@@ -268,7 +269,7 @@ The SNAP doesn't enable this. But there's a complication...
 ```26:31:keyboards/nullbitsco/snap/config.h
 // NOTE: There is a bug in AVR deep sleep, which
 // causes the MCU to stop responding in some cases.
-// Disabling the watchdog prevents the MCU from entering 
+// Disabling the watchdog prevents the MCU from entering
 // power down, while still turning off LEDs, audio, etc.
 // See qmk_firmware/issues/20087 for background
 #undef WDT_vect
@@ -276,9 +277,9 @@ The SNAP doesn't enable this. But there's a complication...
 
 This is a double-edged sword. It was added to work around an AVR bug where the MCU **stops responding** after entering deep sleep -- which, ironically, sounds a lot like the symptom you're experiencing. The workaround removes the watchdog interrupt vector so the MCU never fully enters power-down mode.
 
-However, this also means that `SPLIT_WATCHDOG_ENABLE` (which uses the AVR watchdog timer) may not work correctly with this workaround in place. The watchdog's reset mode (used by `SPLIT_WATCHDOG_ENABLE`) is distinct from the interrupt mode (used by `WDT_vect` for sleep wake), so there's a *chance* they don't conflict -- but it would need testing.
+However, this also means that `SPLIT_WATCHDOG_ENABLE` (which uses the AVR watchdog timer) may not work correctly with this workaround in place. The watchdog's reset mode (used by `SPLIT_WATCHDOG_ENABLE`) is distinct from the interrupt mode (used by `WDT_vect` for sleep wake), so there's a _chance_ they don't conflict -- but it would need testing.
 
-**The core tension**: the `#undef WDT_vect` was added to prevent *exactly this kind of hang*, but it may not be sufficient, and it blocks the most natural recovery mechanism.
+**The core tension**: the `#undef WDT_vect` was added to prevent _exactly this kind of hang_, but it may not be sufficient, and it blocks the most natural recovery mechanism.
 
 ## 3. `DISABLE_SYNC_TIMER`
 
@@ -292,9 +293,9 @@ This disables timer synchronization between the halves. If the slave's internal 
 
 The SNAP uses single-wire soft serial on pin `E6`. This protocol is inherently sensitive to:
 
-- **Electrical noise** on the TRRS cable (especially longer cables)
-- **Loose TRRS connections** -- even slight contact issues can corrupt the serial signal
-- **Hot-plugging** the TRRS cable (the docs explicitly warn against this since VCC runs through the cable)
+-   **Electrical noise** on the TRRS cable (especially longer cables)
+-   **Loose TRRS connections** -- even slight contact issues can corrupt the serial signal
+-   **Hot-plugging** the TRRS cable (the docs explicitly warn against this since VCC runs through the cable)
 
 A single corrupted byte can desync the protocol, and without a watchdog, the slave may never recover.
 
@@ -358,7 +359,7 @@ The sequence is likely:
 
 ## The Fix
 
-Since you **don't care about the keyboard sleeping**, the cleanest solution is to just **prevent the power-down entirely** and add the **watchdog as a safety net**. Good news: `SPLIT_WATCHDOG_ENABLE` uses the watchdog in hardware *reset* mode, not *interrupt* mode, so it should work fine alongside the `#undef WDT_vect` workaround in the keyboard config.
+Since you **don't care about the keyboard sleeping**, the cleanest solution is to just **prevent the power-down entirely** and add the **watchdog as a safety net**. Good news: `SPLIT_WATCHDOG_ENABLE` uses the watchdog in hardware _reset_ mode, not _interrupt_ mode, so it should work fine alongside the `#undef WDT_vect` workaround in the keyboard config.
 
 Here's what I'd add to your keymap `config.h`:
 
@@ -366,7 +367,7 @@ Here's what these two changes do:
 
 **`NO_SUSPEND_POWER_DOWN`** -- This is the direct fix. It tells QMK to skip the power-down code path entirely during USB suspend. Since you don't want the keyboard to sleep anyway, this eliminates the trigger. The LEDs and OLED will still turn off (that's handled separately), but the MCU stays fully awake and responsive. This addresses the root cause more cleanly than `#undef WDT_vect` -- it prevents the problematic code from running rather than breaking the interrupt vector it depends on.
 
-**`SPLIT_WATCHDOG_ENABLE`** -- This is the safety net. If the right half *does* lose communication for any reason (flaky TRRS connection, electrical noise, etc.), it will automatically reboot after 3 seconds instead of hanging forever. This turns your current "unplug and replug USB" recovery into an automatic 3-second self-heal.
+**`SPLIT_WATCHDOG_ENABLE`** -- This is the safety net. If the right half _does_ lose communication for any reason (flaky TRRS connection, electrical noise, etc.), it will automatically reboot after 3 seconds instead of hanging forever. This turns your current "unplug and replug USB" recovery into an automatic 3-second self-heal.
 
 You'll need to flash both halves with the new firmware for the watchdog to take effect on the right side. Want me to check if there's anything else worth adjusting, or would you like to build and test this?
 
@@ -376,7 +377,7 @@ You'll need to flash both halves with the new firmware for the watchdog to take 
 
 THe right half becomes unresponsive during active use, not just when fiddling with the dongle or sleeping the machine.
 
-Also, should I remove the undef WDT_vect? 
+Also, should I remove the undef WDT_vect?
 
 ---
 
@@ -390,9 +391,9 @@ The `NO_SUSPEND_POWER_DOWN` is still worth keeping -- it can't hurt, and it remo
 
 **On removing `#undef WDT_vect`**: Yes, you should. Here's why:
 
-- `#undef WDT_vect` was a workaround for the AVR deep sleep hang. With `NO_SUSPEND_POWER_DOWN`, the MCU never enters deep sleep, so the workaround is redundant.
-- More importantly, while `SPLIT_WATCHDOG_ENABLE` uses the watchdog in *reset mode* (which doesn't need `WDT_vect`), removing the `#undef` is cleaner -- it restores the full watchdog interrupt vector so nothing in QMK's internals is working with a broken assumption.
-- Since this is in the keyboard-level config (not your keymap), it would affect all keymaps for this board, but that's fine -- `NO_SUSPEND_POWER_DOWN` replaces its purpose.
+-   `#undef WDT_vect` was a workaround for the AVR deep sleep hang. With `NO_SUSPEND_POWER_DOWN`, the MCU never enters deep sleep, so the workaround is redundant.
+-   More importantly, while `SPLIT_WATCHDOG_ENABLE` uses the watchdog in _reset mode_ (which doesn't need `WDT_vect`), removing the `#undef` is cleaner -- it restores the full watchdog interrupt vector so nothing in QMK's internals is working with a broken assumption.
+-   Since this is in the keyboard-level config (not your keymap), it would affect all keymaps for this board, but that's fine -- `NO_SUSPEND_POWER_DOWN` replaces its purpose.
 
 Let me verify both files look right.
 
@@ -406,3 +407,63 @@ One note on the keymap comment -- it still references compatibility with the `#u
 
 Remember to **flash both halves** -- the watchdog runs on the slave (right) side, so it needs the new firmware too.
 
+---
+
+Let me look at the keymap configuration and keyboard definition to understand where these keys are mapped.
+
+[10 tools called]
+
+This is a great diagnostic question. Let me trace each of your dead keys through the matrix to find the pattern.
+
+## Matrix analysis of the non-working keys
+
+Your keymap uses `LAYOUT_ansi`. Here are the matrix positions for each dead key:
+
+| Key you reported | Keycode in keymap | Matrix position | Right-half local row | **Column**         |
+| ---------------- | ----------------- | --------------- | -------------------- | ------------------ |
+| `\`              | `KC_BSLS`         | `[9, 7]`        | row 3 (pin F7)       | **7 (demux)**      |
+| End              | `KC_END`          | `[8, 7]`        | row 2 (pin F6)       | **7 (demux)**      |
+| Page Up          | `KC_PGUP`         | `[10, 7]`       | row 4 (pin B1)       | **7 (demux)**      |
+| Page Down        | `KC_PGDN`         | `[11, 7]`       | row 5 (pin B3)       | **7 (demux)**      |
+| Delete           | `KC_HOME`\*       | `[8, 8]`        | row 2 (pin F6)       | **8 (ext pin B6)** |
+
+\*Note: your keymap maps the physical "Delete" position to `KC_HOME`, not `KC_DEL`. If you remapped it to Delete through VIA, see below.
+
+## Verdict: almost certainly hardware
+
+**Four of the five dead keys share a single electrical column -- column 7 of the right-half demux.** They span four different row pins (F6, F7, B1, B3), so the row scanning is fine. The common element is the demux output.
+
+Column 7 is demux address `111` (binary). The `select_col` function in `matrix.c` drives all three mux pins (`D7`, `C6`, `D4` on the right side) to select this column:
+
+```60:66:keyboards/nullbitsco/snap/matrix.c
+static void select_col(uint8_t col) {
+    // Drive demux with correct column address
+    for (uint8_t bit = 0; bit < MATRIX_MUX_COLS; bit++) {
+        uint8_t state = (col & (0b1 << bit)) >> bit;
+        gpio_write_pin(col_pins[bit], !state);
+    }
+}
+```
+
+If the demux output line for address 7 is broken -- a cracked trace, bad solder joint on the demux IC, or a damaged demux channel -- every key on column 7 goes dead while all other columns work perfectly. This matches your symptoms exactly.
+
+The fifth key ("Delete" at `[8, 8]`) uses a completely different electrical path: pin `B6` (the extended pin), not the demux. The fact that it's also dead could mean:
+
+-   **Physical PCB damage in the right edge area** -- all five keys live in the same narrow vertical strip on the far right of the right PCB. A hairline crack, corrosion, or flex damage could take out multiple traces regardless of which column circuit they belong to.
+-   **Or a VIA remap issue** -- your keymap actually maps that position to `KC_HOME`, not `KC_DEL`. If you remapped it to Delete via VIA and the EEPROM got corrupted/cleared, the key would revert to Home, which you'd perceive as "Delete stopped working" even though the switch is fine.
+
+## Quick test to confirm
+
+**Test the Pause key** (`KC_PAUS`, matrix `[6, 7]`). It's in the top-right area of the right half and also on demux column 7. If Pause is also dead, that's a definitive confirmation that the demux column 7 output has failed -- a hardware problem.
+
+## What you can try (software, quick)
+
+Before assuming hardware failure, try **clearing the VIA EEPROM** to rule out corrupted key mappings. Hold the key at the top-left of the right half (Escape position, `[0,1]`) while plugging in USB -- or if your QMK build supports it, use the `EE_CLR` keycode to reset EEPROM. This will revert all VIA remaps to the compiled keymap defaults. If the column 7 keys come back, it was VIA corruption; if not, it's hardware.
+
+## If it is hardware
+
+The most likely failure points, in order:
+
+1. **Demux IC solder joints** on the right PCB -- reflow the demux chip
+2. **Cracked/corroded trace** from the demux output 7 to the column line -- inspect under magnification
+3. **TRRS connector/cable** -- less likely since it would affect all right-side keys, not just one column, but worth swapping the cable to rule it out
